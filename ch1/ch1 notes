@@ -1,0 +1,70 @@
+tests show you presence of errors
+types show you absence of them
+types *reduce*, usually not eliminate tests
+
+types are first-class
+
+types let you name concepts, use IDE, document
+
+powerful code generation in Idris
+
+type-driven development: you first write types, then implementation
+    type -> define -> refine
+
+types describe precisely that conceptual model in your head
+
+dependant type is calculated from values
+
+List - generic list with no explicit length
+Vect - list with the length explicitly in type
+
+write a type that precisely describes the valid states of a system
+and that constrains the operations the system is allowed to perform.
+A total function with that type is guaranteed by the type checker to
+perform those operations as preciselt as the type requires
+
+Holes - stand for incomplete programs
+
+:t exp (print type)
+
+:t Type (Type 1)
+:t Type 1 (Type 2)...
+
+entry: Main module -> main function
+
+    module Main
+
+    main : IO ()
+    main = putStrLn "Hello world!"
+
+--
+    idris Hello.idr (later :exec)
+or
+    idriso Hello.idr -o Hello
+    ./Hello
+--
+
+a hole:
+    putStrLn ?greeting -- only String will fit here
+you can type-check and evaluate programs with holes in REPL
+    :t greeting
+
+    the String (cast 'a')
+
+a database can for example return a type that describes its schema
+
+    StringOrInt : Bool -> Type
+    StringOrInt x = case x of
+                         True => Int
+                         False => String
+
+    getStringOrInt : (x : Bool) -> StringOrInt x
+    getStringOrInt x = case x of True => 94
+                                 False => "ninety four"
+
+    valToString : (x : Bool) -> StringOrInt x -> String
+    valToString x val = case x of
+                             True => cast val
+                             False => val
+
+
