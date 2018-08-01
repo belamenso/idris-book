@@ -1,0 +1,133 @@
+Idris isn't lazy by default
+all top-level functions must have a type declaration
+arguments may be optionally named
+    f : (a : Double) -> int
+
+I think you have to use $ if you want to use . in an expression
+
+    repl str f
+repeatedly displays a string and then displays the result of f $ str
+
+Prelude is always automatically imported by Idris
+
+Int, Integer, Double, Nat
+out of these Integer and Nat are unbounded
+you can only subtract smaller Nat from a bigger one
+any number is either Integer or Double by default
+3 + 4.0 : Double
+everything is Integer by default
+
+in repl you can refer to the last result and bind expressions
+    it + 10
+    :let x = 10
+
+types: (the is not syntax, just a function)
+    the Double 10
+
+cast: (as long as the conversion is valid)
+    :let x = 10
+    :let y = 1.0
+    x + y -- error
+    -- ok:
+    cast x + y
+    x + cast y
+
+    the Integer $ cast 1.5
+
+strings:
+    'a'
+    "asd"
+    length reverse substr ++
+
+[1..5]
+
+both are equivalent, but naming the argument means you can refer
+to it later
+    double : (value : Int) -> Int
+    double : Int -> Int
+    getStringOrInt : (x : Bool) -> StringOrInt x
+
+variables in types: (variables, not type variables)
+lowercase are variables
+    id : ty -> ty
+    id x = x
+
+ependent types in action:
+    the : (ty: Type) -> ty -> ty
+    the ty x = x
+    :t the Int -- Int -> Int
+    :t the Double -- Double -> Double
+
+contraints: Num Eq Ord
+    double : Nat a => a -> a
+    double x = x + x
+    (+) 1 2
+    x `mod` 2
+
+more holes: (these are ok, you can use them in your program
+                and implement them later)
+    Shape: Type
+    rotate: Shape -> Shape
+
+lambdas
+    \s => s * s
+    \a : Int, b : Int => a + b
+
+let, where
+    let a = 10 -- in here is optional
+        b = 20 in
+        a + b
+
+tuples, lists (COMMAS!)
+    (1,2)
+    (3, "str")
+    fst (1,2) -- 1
+    snd (1,2) -- 2
+    () -- unit is an empty tuple, both type and an instance
+tuples are represented as nested pairs, so
+    (a, (b, (c)))
+is the same as
+    (a, b, c)
+
+lists are arbitrary length, but all elements have the same type
+    List String
+    List Integer
+    [] -- error, what type does it have?
+    the (List String) []
+
+:: for consing lists
+Nil is for []
+    the (List Int) Nil
+    x :: xs
+    [1,2,3,4]
+
+ranges:
+    [1..5]
+    [1,3..9] -- [1,3,5,7,9]
+    [5,4..1] -- [5,4,3,2,1]
+
+functionc over lists (basically Haskell):
+    words : String -> List String
+    unwords : List String -> String -- separated by space
+    length : List a -> Nat
+
+:t length
+    Prelude.List.length : List a -> Nat
+    Prelude.String.length : String -> Nat
+
+    sum [1..10]
+
+exporting from module: (export keyword)
+    export
+    f : ...
+    f x = ...
+
+by convention: module names are the same as file names
+if no module declaration: Main by default
+
+importing
+    import ModuleName
+    import DirectoryName.ModuleName
+
+Idris has packages, check out documentation
+
