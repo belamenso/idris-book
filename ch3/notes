@@ -68,3 +68,55 @@ case expressions:
     createEmpties = replicate _ [] -- !!!! _ is deduced!
 
 
+implicit values: _ means that there can be only one value there
+                 and that it's clear from other supplied parameters
+    append : a -> (n : Nat) -> (m : Nat) -> Vector n a -> Vector m a ->
+             Vector (n + m) a
+
+    append Char 2 2 ['a', 'b'] ['c', 'd']
+    append _ _ _ ['a', 'b'] ['c', 'd']
+
+implicit arugments:
+    append : Vect n a -> Vect m a -> Vect (m + n) a
+^ here the implicit arguments are n, m, a
+they're *unbound implicits*, as they weren't declared/bound anywhere
+    append : {a : Type} -> {n : Nat} -> {m : Nat} ->
+             Vect n a -> Vect m a -> Vect (n + m) a
+^ the notation means that a, n, m will be inferred by Idris, not
+written down by a programmer, they're bound
+
+when you write
+    append : Vect n elem -> Vect m elem -> Vect (n + m) elem
+Idris rewrites it as
+    append : {elem : _} -> {n : _} -> {m : _} ->
+             Vect n elem -> Vect m elem -> Vect (n + m) elem
+and deduces
+    append : {elem : Type} -> {n : Nat} -> {m : Nat} ->
+             Vect n elem -> Vect m elem -> Vect (n + m) elem
+
+undefined name is treated as an unbound implicit if it begins
+with a lowercase letter and appears either on its own or
+in a function argument position
+    test : f m a -> b -> a -- unbound implicits are m, a, b
+
+refer directly to an implicit type:
+    length : Vector n elem -> Nat
+    length {n} xs = n
+
+partial application of implicits:
+    append {elem = Char} {n = 2} {m = 3}
+    -- the result:
+    -- append : Vect 2 Char ->  Vect 3 Char -> Vect 5 Char
+
+you can case-split on an implicit argument:
+    createEmpties : Vect n (Vect 0 a)
+    createEmpties {n = Z} = []
+    createEmpties {n = (S k)} = [] :: createEmpties -- here no need for {}
+no need to provide a Nat explitictly because only k would type-check
+but in the REPL:
+    createEmpties -- error
+    createEmpties {a=Int} {n=2} -- [[], []] -- ok
+    the (Vect 2 (Vect _ Int)) createEmpties -- ok
+
+"Type-level variables are implicit arguments to functions, which can be brought into scope and used like any other arguments by enclosing them in braces {}."
+

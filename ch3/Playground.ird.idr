@@ -35,7 +35,7 @@ fourInts : Vect 4 Int
 fourInts = ?fourInts_rhs
 
 createEmpties : Vect n (Vect 0 elem)
-createEmpties = replicate _ []
+createEmpties {n} = replicate n []
 
 transposeHelper : (x : Vect n elem) ->
                   (xsTrans : Vect n (Vect len elem)) ->
