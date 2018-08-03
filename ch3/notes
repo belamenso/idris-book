@@ -1,0 +1,70 @@
+type - write a type or inspect a type of a hole
+define - create a function outline or break it down
+refine - fill in a hole or make the type more precise
+
+https://github.com/idris-hackers/idris-vim
+\d - add definition
+\c - case split
+\r - reload
+\e - evaluate
+\t - type
+\h - documentation
+\i - Idris response window
+\o - insert obvious value
+        satisfying constraints
+
+pattern matching on lists:
+    describeList [] = "Empty"
+    describeList (x :: xs) = "Not empty, tail = " ++ show xs
+--
+    :total f -- check if Idris thinks it's a total function
+Idris believes that a function is total if it
+    - has clauses covering all possible well-typed inputs
+    - all recursive calls converge on a base case
+
+Idris knows how to case-split by looking up constructors
+
+Nat:
+    Z
+    (S k)
+
+functions have to be defined before use
+"This is necessary due to complications that arise with dependent types, where the definition of a function can affect a type."
+
+	mutual
+	  isEven : Nat -> Bool
+	  isEven Z = True
+	  isEven (S k) = isOdd k
+
+	  isOdd : Nat -> Bool
+	  isOdd Z = False
+	  isOdd (S k) = isEven k
+
+--
+	import Data.Vect
+	fourInts : Vect 4 Int
+	fourInts = [1,2,3,4]
+
+you can have the same constructors (e.g. [] and ::) for different data
+	types, but they have to be defined in separate namespaces (usually
+	modules)
+
+infer arguments:
+	the (List _) ["hello", "there"] -- .. : List String
+	the (Vect _ _) ["hello", "there"] -- .. : Vect 2 String
+
+same lengths (len):
+	allLengths : Vect len String -> Vect len Nat
+
+totality annotation (like export)
+    total f x = x + 1
+
+case expressions:
+    case x < y of
+        True => 12
+        False => 10
+
+    createEmpties : Vect n (Vect 0 a)
+    createEmpties = replicate _ [] -- !!!! _ is deduced!
+
+
