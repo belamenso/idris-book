@@ -1,0 +1,79 @@
+the more precise your types will be the more you will get from
+interactive editing in Idris
+
+5 basic types of groups (all defined with the same syntax)
+    enumerated
+    union (enumerated + data)
+    recursive (union + self-reference)
+    generic
+    dependent
+
+convention:
+initial capital letter for type and data constructors
+(not technically required)
+
+enumeration:
+    data Bool = True | False -- <- data constructors
+    --   ^ type constructor
+
+union:
+    data Shape = Triangle Double Double 
+               | Circle Double
+
+    ||| shape
+    data Shape =
+      ||| triangle
+      Triangle Double Double
+      | ||| rectangle
+      Rectangle Double Double
+      | ||| circle
+      Circle Double
+or (don't use unless you need additional flexibility)
+    data Shape where
+        Triangle : Double -> Double -> Shape
+        Rectangle : Double -> Double -> Shape
+        Circle : Double -> Shape
+
+    data Nat = Z | S Nat
+
+Nat
+things like Nat are compiled down effectively :)
+sort [1..200] is slow in terminal and fast after compilation
+Nat is used mainly to describe structure so it's usually not too big
+types are erased at compilation
+internally compiler recognizes Nat and it's stored as an integer
+
+    %name Picture pic, pic1, pic2 -- Idris will use these names when
+                                     case-completing
+
+recursive data structures must have at least one base case
+    data Infinite = Forever Infinite
+
+    data Maybe valtype = Nothing | Just valtype
+
+    data List elem = Nil | (::) elem (List elem)
+
+    data Either a b = Left a | Right b
+
+    data Tree elem = Empty
+                   | Node (Tree elem) elem (Tree elem)
+
+List is a "generic type" (since it's : Type -> Type)
+List Int is a type
+
+    compare : Ord a => a -> a -> Ordering
+    data Odering = LT | EQ | GT
+
+@ patterns
+when you pattern match something and want to return it unchanged
+you can name your patterns
+    @orig(Node left val right) => orig
+
+This is why the functional notation is useful:
+you can limit scope of accepted data types
+    data BSTree : Type -> Type where
+      Empty : Ord elem => BSTree elem
+      Node : Ord elem => (left : BSTree elem) ->
+                         (val : elem) -> 
+                         (right : BSTree elem) ->
+                         BSTree elem
