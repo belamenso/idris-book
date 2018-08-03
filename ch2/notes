@@ -131,3 +131,22 @@ importing
 
 Idris has packages, check out documentation
 
+whitespace significance
+in any list of definitions/declarations, all must begin in
+    the same column
+set up vim to replace tabs with spaces
+
+-- comment
+{- multiline
+   comment -}
+documentation comments tell you if a function is total
+    :doc fst
+
+    ||| Calculate the average length of words in a string.
+    ||| @str a string containing words separated by whitespace. <-- this will show up as an argument
+                                                                    specification in the :doc
+    average : (str : String) -> Double
+
+program entry:
+    Main.main : IO ()
+
