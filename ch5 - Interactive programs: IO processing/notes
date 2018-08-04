@@ -1,0 +1,127 @@
+to write interactive programs in Idris, a pure langugage,
+we have to distinguish between evaluation and execution
+
+describing sequences of interactions
+once you do that, you leave that to Idris environment to execute
+these actions
+IO lets you describe interactive programs that return a value
+
+String -> IO Int
+    takes a string and returns a describtion of an interactive
+    program that produces an Int
+
+functions -> IO are still pure because they merely describe
+interactive actions
+
+in REPL
+    putStrLn "1"
+    -- io_bind (prim_write "1\n") (\__bindx => io_pure ()) : IO ()
+you have to pass it to execution environment:
+    :exec putStrLn "a"
+
+:c execName
+    -- will result int execName being compiled and executable
+    -- via ./execName
+
+getLine
+putStrLn
+putStr
+
+no function of type IO String -> String can exist, because it would
+    mean that you can know what string will be read without
+    reading it (executing)
+
+(>>=) : IO a -> (a -> IO b) -> IO b
+
+getLine >>= putStrLn
+
+do action1
+   action2 -- action1 >>= \_ => action2 -- (previous value is ignored)
+
+the result of an action can be assigned to a variable
+do x <- getLine
+   putStrLn x
+
+it's like
+    getLine >>= \x -> putStrLn x
+
+you can use let (no in) inside do (let allows only pure expressions)
+let x = exp -- assigns the evaluated expr
+x <- action -- assigns the retuls of executed action to x
+
+pure : a -> IO a
+pure allows you to prodece value in an interactive program without
+having any other input or output effect when it's executed
+    readNumber : IO (Maybe Nat)
+    readNumber = do
+      input <- getLine
+      if all isDigit $ unpack input
+         then pure $ Just $ cast input -- cast usage
+         else pure Nothing -- pure because this must return IO (Maybe Nat),
+                              not Maybe Nat. Inspect it with holes.
+
+
+printLn : Show a => a -> IO ()
+printLn = putStrLn . show
+
+usePair = do (a, b) <- readPair
+
+-- this compiles but is not total, so possible runtime error
+-- always check for totality
+readNumbers : IO (Maybe (Nat, Nat))
+readNumbers = do
+  Just a <- readNumber -- if not match - crash
+  Just b <- readNumber
+  pure $ Just $ (a, b)
+
+total readNumbers : IO (Maybe (Nat, Nat))
+readNumbers = do
+  Just a <- readNumber | Nothing => pure Nothing -- Nothing will be
+                                                    the result of
+                                                    readNumbers
+  Just b <- readNumber | Nothing => pure Nothing
+  pure $ Just $ (a, b)
+
+total countdown : (secs : Nat) -> IO ()
+countdown Z = putStrLn "Lift off"
+countdown (S secs) = do putStrLn . show $ S secs
+                        usleep 1000000
+                        countdown secs
+
+  let Just (new_str, new_state) = f initial_state s
+    | Nothing => pure ()
+
+In type-driven development, we aim to express what we know about data in its type; if we can’t know something about data, we need to express this somehow too.
+
+data VectUnknown : Type -> Type where
+  MkVect : (len : Nat) -> Vect len a -> VectUnknown a
+
+readVect : IO (VectUnknown String) -- this btw cannot be run in REPL,
+                                      only by >>= or do and with some other
+                                      thing like printVect
+readVect = do x <- getLine
+              if (x == "")
+                 then pure (MkVect _ [])
+                 else do MkVect _ xs <- readVect
+                         pure (MkVect _ (x :: xs))
+
+printVect : Show a => VectUnknown a -> IO ()
+printVect (MkVect len xs) =
+  putStrLn $ show xs ++ " of length " ++ show len
+
+there are sometimes properties of data that you cannot know at
+runtime. To save you doing things like these with readVect, Idris
+provides dependent pairs
+the type of the second element in a pair can be computed
+from the value of the first element
+
+    anyVect : (n : Nat ** Vect n String)
+    anyVect = (3 ** ["a", "b", "c"])
+
+you can ommit the first type sometimes:
+    anyVect (n ** Vect n String)
+
+you can make readVect return a dependent pair of length and that vector
+
+finished at the second exercise
+
