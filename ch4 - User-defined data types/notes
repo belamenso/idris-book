@@ -77,3 +77,100 @@ you can limit scope of accepted data types
                          (val : elem) -> 
                          (right : BSTree elem) ->
                          BSTree elem
+
+dependent type is calculated from another value
+Vect -> Nat -> Type -> Type
+no syntactic distinction between types and expressions
+they allow you to give more precise information about the 
+    data constructors by adding more arguments to the type constructor
+
+    data PowerSource = Petrol | Pedal
+
+    -- dependent data type
+    data Vehicle : PowerSource -> Type where
+         Bicycle : Vehicle Pedal
+         Car : (fuel : Nat) -> Vehicle Petrol
+         Bus : (fuel : Nat) -> Vehicle Petrol
+
+    -- valid for all, type var
+    wheels : Vehicle power -> Nat
+    wheels Bicycle = 2
+    wheels (Car fuel) = 4
+    wheels (Bus fuel) = 4
+
+    -- valid for some, specify
+    refuel : Vehicle Petrol -> Vehicle Petrol
+    refuel (Car fuel) = Car 100
+    refuel (Bus fuel) = Bus 200
+    refuel Bicycle impossible -- this clause by default doesn't appear
+                                 after case expanding, but you can
+                                 add impossible keyword if you want
+
+here you defined two data types: Vehicle Petrol and Vehicle Pedal
+so they're sometimes called "families of types"
+because we define multiple of them at the same time
+the PowerSource is an index of the Vehicle family
+it tells you exactly which Vehicle type you mean
+
+Vect is a family of types, indexed by its length and parametrized
+by an element type
+parameter - unchanged across the entire structure, here every element
+of the vector has the same type
+index - may change across a structure, here, every subvector has
+a different length
+you can be sure that the specific value of a parameter plays no
+    part in function's definition. The index, however, might.
+    (like with CreateEmpties)
+
+Fin is in Data.Fin, it's a bounded Nat, 0 <= x < n
+type-safe element lookup
+    Vect.index : Fin n -> Vect n a -> a
+
+imort module in repl by :module
+it there are many functions with the same names, quality them:
+    Vect.index
+
+you can use [] for Nil, Fin
+            0, 1, ... for Z, S(Z), ...
+            [,] for ::
+
+Data.Vect: (check out how cool this is :)
+    integerToFin : Integer -> (n : Nat) -> Maybe (Fin n)
+
+common pattern:
+    a type tells you when it's safe to call and you have to check it before
+    calling
+
+    vectTake : (n : Nat) -> Vect (n + m) a -> Vect n a
+    vectTake Z xs = []
+    vectTake (S k) (x :: xs) = x :: vectTake k xs
+
+"Design a new data type for the representation of the data store. In type-driven development, even at the highest level, types come first. Before we can implement any part of a data store program, we need to know how we’re representing and working with the data." 
+
+names can be with ':
+    x'
+
+    items : (store : DataStore) -> Vect (size store) String
+    items (MkData size items) = items
+
+replWith:
+    : (state : a) -> (prompt : String) -> (a -> String -> Maybe (String, a))
+    -- exists if you return Nothing
+
+    the Integer (cast "sdafsd") -- 0
+
+"To process the String input, you somehow have to work out which one of the commands add, get, or quit has been entered. Rather than processing the input string directly, it’s usually much cleaner to define a new data type that represents the possible commands. This way, you can cleanly separate the parsing of commands from the processing."
+Don't represent data with strings, make a new data type for it,
+    if you want you can leave out the error handling (hole), but
+    it will make it more roboust and extensible
+
+    span : (Char -> Bool) -> String -> (String, String)
+    span (/= ' ') "hello there" --  ("hello", " there")
+
+    ltrim : String -> String
+    unpack : String -> List Char
+    isDigit : Char -> Bool
+    all : (a -> Bool) -> List a -> Bool
+
+    all isDigit $ unpack val
+
