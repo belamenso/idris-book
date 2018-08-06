@@ -76,3 +76,44 @@ strCons 'a' "bcd"
 
 (!!!!!) Printf.idr (!!!!!!!)
 
+data Schema -- stands for a type that hasn't been defined yet, like a hole
+
+this will make e.g. (String, String, String, String, ())
+because tuples are like Lisp's lists
+    TupleType : Nat -> Type -> Type
+    TupleType Z ty = ()
+    TupleType (S k) ty = (ty, (TupleType k ty))
+
+declaring operators: (!) infixl infixr infix (non-associative), then
+precedence and operator
+    infixr 5 .+. -- (SString .+. SInt .+. SString)
+    data Schema = SString
+                | (.+.) Schema Schema 
+you can pattern match on it
+    SchemaType : Schema -> Type
+    SchemaType SString = String
+    SchemaType (x .+. y) = (SchemaType x, SchemaType y)
+
+infixl 5 ==, /=
+infixl 6 <, <=, >, >=
+infixl 7 <<, >>
+infixl 8 +, -
+infixl 9 *, /
+infixr 7 ::, ++
+
+records:
+    record DataStore where
+      constructor MkData
+      schema : Schema
+      size : Nat
+      items : Vect size (SchemaType schema)
+a record introduces new data type, like data, but
+- there can only be one constructor
+- the fields give rise to projection functions, automatically generated
+  from the types of the fields
+
+idea is to refine some types, then with holes make the program
+typecheck again
+
+finished at 
+To parse complete inputs as described by schemas, you’ll need to be able to parse portions of the input according to a subset of the schema. F
