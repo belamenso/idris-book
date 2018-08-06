@@ -1,0 +1,78 @@
+types are first-class, like functions
+expressions can compute types, types can take any expression
+as an argument
+you can calculate type of A form value of B
+e.g. given database schema, calculate types for queries,
+     given HTML form, calculate type of a function to process inputs
+
+type synonyms give alteranive names to types
+type-level functions
+
+    Position : Type
+    Position = (Double, Double)
+
+    Polygon : Nat -> Type
+    Polygon n = Vect n Position
+
+    triangle : Polygon 3
+    triangle = [(1.0, 0.0), (3.0, 0.0), (0.0, 4.0)]
+    -- :t will display Polygon 3
+    -- repl will display Vect 3 (Double, Double)
+
+convention: capital letters for functions that are intended to compute
+types
+
+dependent pattern matching:
+the type of x is derived by inspecting the value of y
+    StringOrInt : Bool -> Type
+    StringOrInt False = String
+    StringOrInt True = Int
+
+    getStringOrInt : (isInt : Bool) -> StringOrInt isInt
+    getStringOrInt False = "hello"
+    getStringOrInt True = 101
+
+type-level function can be used everywhere a Type is expected
+
+you can leave holes in types
+you can put case in a type
+
+\mc to make case expression
+
+    valToString : (isInt : Bool) ->
+                  (case isInt of False => String
+                                 True => Int) ->
+                   String
+    valToString False s = trim s
+    valToString True i = cast i
+
+usually, treat type-level functions as ordinary functions, but they're
+compile-time only.
+there's no runtime representation of Type, no way to inspect
+a Type directly (e.g. via pattern matching)
+
+???????? what does he mean with these constants?
+"Only functions that are total will be evaluated at the type level. A function that isn’t total may not terminate, or may not cover all possible inputs. Therefore, to ensure that type-checking itself terminates, functions that are not total are treated as constants at the type level, and don’t evaluate further."
+
+!!!!!!!
+    AdderType : (numargs : Nat) -> Type
+    AdderType Z = Int
+    AdderType (S k) = (next : Int) -> AdderType k
+
+    adder : (numArgs : Nat) -> (acc : Int) -> AdderType numArgs
+    adder Z acc = acc
+    adder (S k) acc = \x => adder k (acc + x)
+here working with any Num type
+    AdderType : (numargs : Nat) -> Type -> Type
+    AdderType Z numType = numType
+    AdderType (S k) numType = (next : numType) -> AdderType k numType
+
+    adder : Num numType =>
+            (numargs : Nat) -> numType -> AdderType numargs numType
+    adder Z acc = acc
+    adder (S k) acc = \next => adder k $ next + acc
+
+strCons 'a' "bcd"
+
+(!!!!!) Printf.idr (!!!!!!!)
+
