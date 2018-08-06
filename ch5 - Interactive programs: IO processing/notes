@@ -125,3 +125,14 @@ you can make readVect return a dependent pair of length and that vector
 
 finished at the second exercise
 
+you can first assume that the result is successful:
+
+    do Right h <- openFile fname Read
+       Right line <- fGetLine h
+       -- the rest
+
+then make it total with | Left x => ...
+
+difference between evaluating a pure function and execution of
+interactive actions. :exec in REPL executes interactive actions
+
