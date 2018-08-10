@@ -1,0 +1,147 @@
+double : Num a => a -> a
+double x = x + x
+
+Constrained generic types
+interfaces
+
+differences between interfaces and Haskell's type classes:
+* interfaces can be parametrized by values of any type
+* interfaces are not limited to types or type constructors
+* interfaces can have multiple implementations
+
+(==) : Eq a => a -> a -> Bool
+(/=) : Eq a => a -> a -> Bool
+
+multiple constraints:
+    f : (Num a, Eq a) => ...
+
+// sometimes it's better to :wq from vim and exec something in Idris
+REPL directly, because sometimes \e in vim gives different results
+
+defining an interface gives you two new top-level methods
+(== and /= are called methods of an interface)
+    interface Eq ty where
+        (==) : ty -> ty -> Bool
+        (/=) : ty -> ty -> Bool
+
+To define these methods for specific cases, you need to give them
+implementations.
+    Eq Matter where
+        (==) Solid Solid = True
+        (==) Gas Gas = True
+        (==) Liquid Liquid = True
+        (==) _ _ = False
+
+        (/=) x y = not (x == y)
+Implementation doesn't contain any types, since they're given in
+the interface declaration.
+When you provide an implementation, you must provide it for all methods.
+
+You can provide default implementations for some methods.
+    interface Eq a where
+        (==) : a -> a -> Bool
+        (/=) : a -> a -> Bool
+
+        (==) x y = not (x /= y)
+        (/=) x y = not (x == y)
+You can therefore provide e.g. only the implementation of == or /=
+
+    data Tree elem = Empty
+                   | Node (Tree elem) elem (Tree elem)
+
+    Eq a => Eq (Tree a) where -- !! implementation constraints
+      (==) Empty Empty = True
+      (==) (Node l1 x r1) (Node l2 y r2) =
+        x == y && l1 == l2 && r1 == r2
+      (==) _ _ = False
+
+You can't parametrize implementations by every instance of Type
+(e.g. not by expressions/functions producing types, type synonyms)
+You can by anything created with data, record, primitive types.
+
+Constrained interfaces:
+    interface Eq a => Ord a where
+        compare : a -> a -> Ordering
+        (<) : a -> a -> Bool
+
+records are by default sorted by the order of their fields
+
+map title (sort collection) -- title is generated from a record
+
+since Eq a => Ord a then you know that id you have Ord of something,
+you have Eq.
+
+to implement Eq: == or /=
+to implement Ord: Eq and compare
+
+The parameters of an interface (in other words, the variables given in the interface header) can have any type. If there’s no explicit type given in the interface header for a parameter, it’s assumed to be of type Type.
+
+interface Show a where
+    show : (x : a) -> String
+    showPrec : (d : Prec) -> (x : a) -> String -- more complicated, rtfm
+
+printLn : Show a -> a -> IO ()
+print : Show a -> a -> IO ()
+
+common interfaces:
+Num: (+) (*) fromInteger     Integer, Int, Nat, Double
+    Neg: negate (-)          Integer, Int, Double
+    Abs: abs
+    Integral: div mod        Integer, Int, Nat
+    Fractional: (/) recip    Double
+    -- recip is 1/x
+
+All integer literals are implicitly converted to the appropriate
+numeric type using fromInteger, so as long as there's an implementation
+of Num for a numeric type, you can use integer literals for that type.
+
+By making an implementation of Num et all you can use standard arithmetic
+notation and integer literals for your own types.
+
+Interfaces in Idris can have any number of parameters, even 0
+    cast : Cast from to => from -> to
+
+    Cast (Maybe a) (List a) where
+        cast Nothing = []
+        cast (Just x) = [x]
+
+It's common for interfaces to be parametrized by type Type -> Type
+map : Functor f => (a -> b) -> f a -> f b
+pure : Applicative f => a -> f a
+(>>=) : Monad m => m a -> (a -> m b) -> m b
+
+    interface Functor (f : Type -> Type) where
+        map : (func : a -> b) -> f a -> f b
+
+    Functor List where
+        map f [] = []
+        map f (x :: xs) = f x :: map f xs
+
+List is of type Type -> Type
+it's useful to implement Functor for container data structures
+
+    Functor (Vect n) where -- notice Vect n is : Type -> Type
+                           -- n is treated as an implitic argument here
+                           -- because of the lower case name
+        map f [] = []
+        map f (x :: xs) = f x :: map f xs
+
+interface Foldable (t: Type -> Type) where
+    foldr : (elem -> acc -> acc) -> acc -> List elem -> acc
+        -- 1 + (2 + (3 + (4 + 0)))
+    foldl : (acc -> elem -> acc) -> acc -> List elem -> acc
+        -- ((0 + 1) + 2) + 3) + 4
+
+(>>=) : IO a -> (a -> IO b) -> IO b
+
+Both have default definitions, so you can implement any one
+    interface Applicative m => Monad (m : Type -> Type) where
+        (>>=) : m a -> (a -> m b) -> m b
+        join : m (m a) -> m a
+
+interface Functor f => Applicative (f : Type -> Type) where
+    pure : a -> f a
+    (<*>) : f (a -> b) -> f a -> f b
+
+"One interesting implementation of Monad in the Prelude is for List. The (>>=) function for List passes every value in the input list to the next function in sequence, and combines the results into a new list. I won’t go into this in detail in this book, but you can use it to write nondeterministic programs."
+
