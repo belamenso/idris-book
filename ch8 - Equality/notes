@@ -1,0 +1,105 @@
+error, cannot fill the hole
+    exactLength : (len : Nat) -> (input : Vect m a) -> Maybe (Vect len a)
+    exactLength {m} len input = case m == len of
+                                     True => Just ?cannotProceed
+                                     False => Nothing
+Idris doesn't trust ==, it's just a Bool, it doesn't guarantee that they
+are really equal, maybe (==) x y = True
+
+data EqNat : (n1 : Nat) -> (n2 : Nat) -> Type where
+  Same : (num : Nat) -> EqNat num num
+
+the (EqNat 3 3) (Same _)
+
+You still can have *type* with unequal arguments (EqNat 2 4), just not
+value (the (EqNat 3 4) (Same _) -- error)
+
+Empty type: like EqNat 3 4, there are no values of that type
+
+making implicit arguments explicit:
+    sameS : (eq : EqNat k j) -> EqNat (S k) (S j)
+    sameS : (k : Nat) -> (j : Nat) -> (eq : EqNat k j) -> EqNat (S k) (S j)
+
+sameS : (k : Nat) -> (j : Nat) -> (eq : EqNat k j) -> EqNat (S k) (S j)
+sameS k j eq = ?sameS_rhs
+-- now case split on eq
+sameS j j (Same j) = ?sameS_rhs_1 -- proof!
+
+this is already implemented:
+    = -- generalised equality
+sth like (it's not in Prelude, but in the interpreter):
+    data (=) : a -> b -> Type where -- like EqNat
+        Refl : x = x -- like Same, but x is an implicit argument
+
+the (1 = 2) Refl -- error
+the (1 = 1) Refl -- ok
+the (2 + 3 = 5) Refl
+
+cong : {func : a -> b} -> x = y -> func x = func y
+
+unification of (S k) and k + 1 will fail
+
+typechecking:
+    compute the expected type
+    check if given type fits
+
+Vect 4 Int and Vect (2 + 2) Int will unify
+Vect (1 + k) Int -- Vect (S k) Int
+Vect (k + 1) int -- Vect (plus k 1) Int
+
+so you can see that k + 1 doesn't match the left side and for now
+can't be evaluated further
+    :printdef plus -- !!!!  
+    plus : Nat -> Nat -> Nat
+    plus 0 right = right
+    plus (S left) right = S (plus left right)
+
+so you sometimes need to explain to Idris that k + 1 is 1 + k
+there's a library function for it
+    plusCommutative : (left : Nat) -> (right : Nat) ->
+                      left + right = right + left
+
+    \k => plusCommutative 1 k
+    -- (k : Nat) -> S k = plus k 1
+think of it as a "reqrite rule" that lets you replace one expression
+with another (??)
+
+special syntax for rewrites:
+rewrite _________ in ?____
+        ^ of type _ = _
+
+myReverse : Vect n a -> Vect n a
+myReverse [] = []
+myReverse {n = S k} (x :: xs) =
+  rewrite plusCommutative 1 k in
+          myReverse xs ++ [x]
+
+instead of using a rewrite you can use a hole and
+provide a separate proof
+    reverseProof : (x : a) -> (xs : Vect k a) ->
+                   Vect (k + 1) a -> Vect (S k) a
+    reverseProof {k} x xs result = rewrite plusCommutative 1 k in result
+
+    otherReverse : Vect n a -> Vect n a
+    otherReverse [] = []
+    otherReverse (x :: xs) = reverseProof x xs (otherReverse xs ++ [x])
+
+Idris can deduce that 0 + m is m, but not that m + 0 is m
+
+proofs:
+plusZeroRightNeutral : (left : Nat) -> left + 0 = left
+plusSuccRightSucc : (left : Nat) -> (right : Nat) ->
+                    S (left + right) = left + S right
+sym : left = right -> right = left
+
+    append_nil : Vect m a -> Vect (plus m 0) a
+    append_nil {m} xs = rewrite plusZeroRightNeutral m in xs
+    -- append_nil {m} xs = rewrite plusCommutative m 0 in xs
+
+    append_xs : Vect (S (m + k)) a -> Vect (plus m (S k)) a
+    append_xs {m} {k} xs = rewrite sym (plusSuccRightSucc m k) in xs
+
+    append : Vect n a -> Vect m a -> Vect (m + n) a
+    append [] ys = append_nil ys
+    append (x :: xs) ys = append_xs (x :: append xs ys)
+
