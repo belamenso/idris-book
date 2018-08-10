@@ -115,5 +115,30 @@ a record introduces new data type, like data, but
 idea is to refine some types, then with holes make the program
 typecheck again
 
-finished at 
-To parse complete inputs as described by schemas, you’ll need to be able to parse portions of the input according to a subset of the schema. F
+You can do that:
+this means that there's no relationship between new and old schema in
+SetSchema
+    data Command : Schema -> Type where
+         SetSchema : (newSchema : Schema) -> Command schema
+         Add : SchemaType schema -> Command schema
+         Get : Integer -> Command schema
+         Quit : Command schema
+
+
+    (>>=) : Maybe a -> (a -> Maybe b) -> Maybe b
+    (>>=) Nothing next  = Nothing
+    (>>=) (Just x) next = next x
+
+    maybeAdd : Maybe Int -> Maybe Int -> Maybe Int
+    maybeAdd x y = do x' <- x
+                      y' <- y
+                      Just $ x + y
+
+    maybeAdd : Maybe Int -> Maybe Int -> Maybe Int
+    maybeAdd x y = x >>= \x' =>
+                   y >>= \y' =>
+                   Just $ x + y
+                   
+the translation of do into >>= is purely syntactic, you don't
+even need a monad to do it, just (>>=)
+
