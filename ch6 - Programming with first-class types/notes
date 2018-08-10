@@ -142,3 +142,5 @@ SetSchema
 the translation of do into >>= is purely syntactic, you don't
 even need a monad to do it, just (>>=)
 
+"A record is a data type with only one constructor, and with automatically generated functions for projecting fields from the record."
+

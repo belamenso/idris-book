@@ -68,9 +68,8 @@ parseSchema ("String" :: xs) =
 parseSchema ("Int" :: xs) =
   case xs of
        [] => Just SInt
-       _ => case parseSchema xs of
-                 Nothing => Nothing
-                 Just xs_sch => Just (SInt .+. xs_sch)
+       _ => do xs_sch <- parseSchema xs
+               Just (SInt .+. xs_sch)
 parseSchema ("Char" :: xs) =
   case xs of
        [] => Just SChar
@@ -94,15 +93,10 @@ parsePrefix SInt input = case span isDigit input of
 parsePrefix SChar input = case unpack input of
                                (c :: ' ' :: rest) => Just (c, ltrim $ pack rest)
                                _ => Nothing
-parsePrefix (schemal .+. schemar) input = 
-  case parsePrefix schemal input of
-       Nothing => Nothing
-       Just (l_val, input') =>
-            case parsePrefix schemar input' of 
-                 Nothing => Nothing
-                 Just (r_val, input'') =>
-                      Just ((l_val, r_val), input'')
-
+parsePrefix (schemal .+. schemar) input = do
+  (l_val, input') <- parsePrefix schemal input
+  (r_val, input'') <- parsePrefix schemar input'
+  Just ((l_val, r_val), input'')
 parseBySchema : (schema : Schema) -> String
                 -> Maybe (SchemaType schema)
 parseBySchema schema input = case parsePrefix schema input of
@@ -112,9 +106,9 @@ parseBySchema schema input = case parsePrefix schema input of
    
 parseCommand : (schema : Schema) -> String -> String ->
                      Maybe (Command schema)
-parseCommand schema "add" rest = case parseBySchema schema rest of
-                                      Nothing => Nothing
-                                      Just restOk => Just $ Add restOk
+parseCommand schema "add" rest = do
+  restOk <- parseBySchema schema rest
+  Just $ Add restOk
 parseCommand schema "get" val = 
   case ltrim val of
        "" => Just GetAll
