@@ -1,0 +1,63 @@
+some types like = are used only to describe relationships between data.
+They're called predicates, if you can construct a value for a predicate,
+then you know that its property holds.
+
+!!!!!!!!! great idea in development, in general
+
+By expressing relationships between data in types you can be explicit
+about the assumptions about the function input, you can be sure that
+it will be called only with valid data
+compile-time contracts that people have to satisfy to call you
+these assumptions are guaranteed to hold, even as a system grows
+
+example use-cases
+    Remove an element from a vector only under the assumption that the element is present in the vector
+    Search for a value in a list only under the assumption that the list is ordered
+    Run a database query only under the assumption that the inputs have been validated
+    Send a message to a machine on the network only under the assumption that you have an open connection
+
+DecEq stands for decidable equality
+
+Elem is defines in Data.Vect
+    data Elem : (value : a) -> (xs : Vect k a) -> Type where
+         Here : Elem x (x :: xs)
+         There : (later : Elem x xs) -> Elem x (y :: xs)
+
+you can create these things easily with \o
+    maryInVector : Elem "Mary" ["Peter", "Paul", "Mary"]
+    maryInVector = There (There Here)
+
+prelude:
+    absurd : Uninhibited t => t -> a
+
+    interface Uninhibited t where
+        uninhibited : t -> Void
+you can implement it:
+    Uninhibited (4 = 5) where
+        uninhibited Refl impossible
+
+so now you have to provide proofs of Elem x xs, like There Here, but
+this is annoying. Idris has auto:
+    total removeELem_auto : (value : a) -> (xs : Vect (S n) a) ->
+                      {auto prf : Elem value xs} -> Vect n a
+    removeELem_auto value xs {prf} = removeElem value xs prf
+auto-implicit arguments, like the implicit argument it can be brought
+to scope by writing it in braces, Idris will attempt to find value
+automatically (Idris will use the same machinery that \o uses in Vim)
+    removeElem_auto 1 [2,3,1,4,1] -- will work, error if it cannot find
+                                  -- a proof
+
+isElem : DecEq ty => (value : ty) -> (xs : Vect n ty) -> Dec (Elem value xs)
+
+-- hangman is a great example of modelling the domain with types
+
+data Either a b = Left a | Right b
+
+* You can write types that express assumptions about how values relate.
+* The Elem dependent type is a predicate that expresses that a value must be contained in a vector.
+* By passing a predicate as an argument to a function, you can express a contract that the inputs to the function must follow.
+* You can write a function to show that a predicate is decidable, using Dec.
+* Idris will attempt to find values for arguments marked auto by expression search.
+* You can capture properties of a system’s state (such as the rules of a game) in a type.
+* Predicates can describe the validity of user input and ensure that the user input is validated when necessary.
+
