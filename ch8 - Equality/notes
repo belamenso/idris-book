@@ -103,3 +103,69 @@ sym : left = right -> right = left
     append [] ys = append_nil ys
     append (x :: xs) ys = append_xs (x :: append xs ys)
 
+Refl is how you express equality, but how to express something not being
+equal? When you construct a value of type a = b you're giving evidence
+that a and b are equal.
+
+Void has no possible values:
+    data Void : Type where
+So if a function returns a value of type Void, one of the arguments to
+that function must be impossible to construct
+
+this is how you do it, impossible means that the pattern clause must
+not type-check
+    total proofIneq : 2 + 2 = 5 -> Void
+    proofIneq Refl impossible
+
+    total valueNotSuc : (x : Nat) -> x = S x -> Void
+    valueNotSuc _ Refl impossible
+
+(!) bottom can type check for any value, but is not total
+    loop : Int
+    loop = loop
+
+if you have produced value of any type, then you can proove anything:
+function in prelude:
+    void : Void -> a
+
+checkEqNat is not very useful now, typesystem needs more info
+    checkEqNat : (num1 : Nat) -> (num2 : Nat) -> Maybe (num1 = num2)
+    checkEqNat num1 num2 = Nothing
+
+
+A property of some values is decidable if you can always say whether the property holds or not for specific values. For example, checking equality on Nat is decidable, because for any two natural numbers you can always decide whether they are equal or not.
+
+type in prelude:
+    data Dec : (prop : Type) -> Type where
+         Yes : (prf : prop) -> Dec prop
+         No  : (contra : prop -> Void) -> Dec prop
+so prf is a proof that a property holds, if you have it, then you can
+construct Yes of that property
+You can construct No only if you have contra, but contra cannot ever be
+evaluated, so type system must know that you cannot pass any argument to
+contra, that is prop cannot exist
+
+the (Dec (2 * 2 = 4)) (Yes Refl)
+
+total proofIneq : 2 + 2 = 5 -> Void
+proofIneq Refl impossible
+
+t : Dec (4 = 5)
+t = No proofIneq
+
+"
+When you run checkEqNat, you aren’t really going to produce a value of the empty type using zeroNotSuc, sucNotZero, or noRec. Essentially, a function that produces a value of type Void can be seen as a proof that its arguments can’t all be provided at the same time. In the case of noRec, the type of the functions says that if you can provide both a proof that k doesn’t equal j and a proof that S k = S j, then there’s a contradiction, and you can therefore have a value of type Void."
+
+Prelude has DecEq and decEq for deciding equality
+    interface DecEq a where
+        decEq : (x : a) -> (y : a) -> Dec (x = y)
+
+so proof that something is unequal is of a = b -> Void and
+proof that something is equal is having a value of type a = b
+
+The rewrite construct allows you to update a type using an equality proof.
+Using holes and interactive editing, you can delegate the details of rewriting types to a separate function.
+Void is a type with no values, used to show that inputs to a function can’t all occur at once.
+A property is decidable if you can always say whether the property holds for some specific values.
+Using Dec, you can compute at runtime whether a property is guaranteed to hold or guaranteed not to hold.
+
